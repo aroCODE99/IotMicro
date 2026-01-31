@@ -1,0 +1,39 @@
+services:
+  authdb:
+    image: postgres:latest
+    ports:
+      - "5000:5432"
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: db
+
+  iotgateway:
+    build: ./IotGateway/
+    image: iotgateway:latest
+    ports:
+      - "8080:8080"
+    develop:
+      watch:
+        - action: sync
+          path: ./IotGateway/src
+          target: ./app/src
+        - action: rebuild
+          path: ./IotGateway/
+    environment:
+      LOGGING_LEVEL_ROOT: warn
+      SERVER_PORT: 8080
+      
+  authservice:
+    build: ./AuthService/
+    image: authservice:latest
+    ports:
+      - "9091:9091"
+    develop:
+      watch:
+        - action: rebuild
+          path: ./AuthService/src
+          target: ./app
+    env_file: "./EnvFiles/req_env_file.env"
+    depends_on:
+      - authdb
